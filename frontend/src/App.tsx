@@ -20,25 +20,28 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFlagged, setIsFlagged] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [flagError, setFlagError] = useState<string | null>(null);
 
   const handleSearch = useCallback(async (question: string) => {
     setError(null);
     setIsFlagged(false);
     setCurrentQuestion(question);
 
-    const result = await askQuestion(question);
+    const { data, error: apiError } = await askQuestion(question);
 
-    if (result) {
-      setAnswer(result);
+    if (data) {
+      setAnswer(data);
     } else {
-      setError('Could not reach the server. Make sure the backend is running.');
+      setError(apiError || 'Could not reach the server. Make sure the backend is running.');
     }
   }, [askQuestion]);
 
   const handleFlag = useCallback(async (reason: string) => {
     if (!answer || !currentQuestion) return;
 
-    const success = await flagAnswer({
+    setFlagError(null);
+
+    const { success, error: apiError } = await flagAnswer({
       question: currentQuestion,
       answer: answer.answer,
       reason,
@@ -47,6 +50,9 @@ function App() {
     if (success) {
       setIsFlagged(true);
       setToastMessage('Flagged successfully. The HOD will review it.');
+    } else {
+      setFlagError(apiError || 'Failed to submit flag. Please try again.');
+      throw new Error(apiError || 'Flag submission failed');
     }
   }, [answer, currentQuestion, flagAnswer]);
 
@@ -82,8 +88,12 @@ function App() {
 
       <FlagModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setFlagError(null);
+        }}
         onSubmit={handleFlag}
+        error={flagError}
       />
 
       {toastMessage && (

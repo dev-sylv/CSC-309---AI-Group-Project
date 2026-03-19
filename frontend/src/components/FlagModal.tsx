@@ -4,30 +4,31 @@ interface FlagModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (reason: string) => Promise<void>;
+  error?: string | null;
 }
 
-export function FlagModal({ isOpen, onClose, onSubmit }: FlagModalProps) {
+export function FlagModal({ isOpen, onClose, onSubmit, error: externalError }: FlagModalProps) {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      setError('Please provide a reason for flagging.');
+      setLocalError('Please provide a reason for flagging.');
       return;
     }
 
     setSubmitting(true);
-    setError('');
+    setLocalError('');
 
     try {
       await onSubmit(reason.trim());
       setReason('');
       onClose();
     } catch {
-      setError('Failed to submit flag. Please try again.');
+      setLocalError('Failed to submit flag. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -36,6 +37,8 @@ export function FlagModal({ isOpen, onClose, onSubmit }: FlagModalProps) {
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  const displayError = externalError || localError;
 
   return (
     <div
@@ -54,14 +57,17 @@ export function FlagModal({ isOpen, onClose, onSubmit }: FlagModalProps) {
         </label>
         <textarea
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
+          onChange={(e) => {
+            setReason(e.target.value);
+            setLocalError('');
+          }}
           placeholder="e.g. The deadline mentioned here seems outdated..."
           className={`w-full font-sans text-sm border-2 rounded-card px-3 py-2 resize-none h-24 bg-cream text-ink outline-none transition-colors duration-200 mb-4 ${
-            error ? 'border-red' : 'border-ink/10 focus:border-gold-border focus:bg-white'
+            displayError ? 'border-red' : 'border-ink/10 focus:border-gold-border focus:bg-white'
           }`}
           disabled={submitting}
         />
-        {error && <p className="text-red text-sm mb-4">{error}</p>}
+        {displayError && <p className="text-red text-sm mb-4">{displayError}</p>}
 
         <div className="flex gap-2 justify-end">
           <button
