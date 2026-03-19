@@ -6,7 +6,6 @@ interface SearchCardProps {
 }
 
 const HINT_CHIPS = [
-  'Clearance requirements',
   'Project submission deadline',
   'Minimum CGPA to graduate',
   'Carry-over course policy',
