@@ -22,7 +22,7 @@ import { QdrantDB } from './vectordb/quadrant.ts';
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
-const cors_origin = process.env.CORS_ORIGIN ?? "http://localhost:5500";
+const cors_origin = process.env.CORS_ORIGIN ?? "*";
 
 // Express needs to parse JSON bodies from requests
 app.use(express.json());
